@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>YT_Transcript</title>
+<style>
+:root {
+  --ink: #1d1a2e;
+  --muted: rgba(29, 26, 46, 0.62);
+  --glass: rgba(255, 255, 255, 0.5);
+  --glass-strong: rgba(255, 255, 255, 0.6);
+  --seg-active: rgba(255, 255, 255, 0.92);
+  --line: rgba(255, 255, 255, 0.65);
+  --accent: #5b4bd6;
+  --error: #b42318;
+  --focus: rgba(91, 75, 214, 0.35);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #f2f0fb;
+    --muted: rgba(242, 240, 251, 0.62);
+    --glass: rgba(30, 28, 48, 0.58);
+    --glass-strong: rgba(255, 255, 255, 0.08);
+    --seg-active: rgba(255, 255, 255, 0.18);
+    --line: rgba(255, 255, 255, 0.14);
+    --accent: #8b7cff;
+    --error: #ff8a80;
+    --focus: rgba(139, 124, 255, 0.45);
+  }
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; background: transparent; }
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  background: transparent;
+  overflow: hidden;
+}
+@media (prefers-color-scheme: dark) {
+  body { background: transparent; }
+}
+
+.window {
+  width: 100%;
+  max-width: 760px;
+  height: 100%;
+  max-height: 560px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 22px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid var(--line);
+  box-shadow: 0 24px 60px rgba(40, 30, 70, 0.18);
+  overflow: hidden;
+}
+.titlebar {
+  height: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 18px;
+  border-bottom: 1px solid var(--line);
+}
+.dot { width: 12px; height: 12px; border-radius: 50%; border: none; padding: 0; cursor: pointer; }
+.dot.red { background: #ff5f57; }
+.dot.yellow { background: #febc2e; }
+.dot.green { background: #28c840; }
+
+.content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px 28px;
+}
+h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.3px; }
+
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.url {
+  flex: 1;
+  min-width: 220px;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--glass-strong);
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  outline: none;
+}
+.url::placeholder { color: var(--muted); }
+.url:focus, .langs:focus { box-shadow: 0 0 0 3px var(--focus); }
+
+button {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--glass-strong);
+  color: var(--ink);
+  cursor: pointer;
+}
+button:hover { filter: brightness(1.04); }
+button:disabled { opacity: 0.55; cursor: default; }
+button.primary {
+  height: 44px;
+  padding: 0 20px;
+  font-size: 15px;
+  border: none;
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.langs {
+  width: 110px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: var(--glass-strong);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+.label { font-size: 13px; color: var(--muted); }
+
+.seg {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  margin-left: auto;
+  border-radius: 10px;
+  background: var(--glass-strong);
+}
+.seg button {
+  height: 28px;
+  padding: 0 12px;
+  border: none;
+  background: transparent;
+  font-weight: 500;
+  color: var(--muted);
+  border-radius: 8px;
+}
+.seg button.active {
+  background: var(--seg-active);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.status { min-height: 18px; font-size: 13px; color: var(--muted); }
+.status.error { color: var(--error); }
+
+.result {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  background: var(--glass-strong);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.result-head { padding: 14px 18px 12px; border-bottom: 1px solid var(--line); }
+.result-title { font-size: 17px; font-weight: 700; }
+.result-meta { margin-top: 3px; font-size: 12px; color: var(--muted); }
+.result-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 14px 18px;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  user-select: text;
+}
+.empty { color: var(--muted); }
+
+.footer { display: flex; gap: 10px; align-items: center; }
+.footer .spacer { flex: 1; }
+</style>
+</head>
+<body>
+<div class="window">
+  <div class="titlebar">
+    <button id="close" class="dot red" title="Fermer" aria-label="Fermer"></button>
+    <button id="minimize" class="dot yellow" title="Réduire" aria-label="Réduire"></button>
+    <button id="fullscreen" class="dot green" title="Plein écran" aria-label="Plein écran"></button>
+  </div>
+
+  <div class="content">
+    <h1>Extraire un transcript</h1>
+
+    <div class="row">
+      <input id="url" class="url" type="text" placeholder="Collez l'adresse de la vidéo YouTube" autocomplete="off" spellcheck="false">
+      <button id="run" class="primary">Récupérer</button>
+    </div>
+
+    <div class="row">
+      <span class="label">Langues</span>
+      <input id="langs" class="langs" type="text" value="fr en" spellcheck="false">
+      <div class="seg" id="formats">
+        <button data-fmt="md" class="active">Markdown</button>
+        <button data-fmt="txt">Texte</button>
+        <button data-fmt="srt">SRT</button>
+      </div>
+    </div>
+
+    <div id="status" class="status"></div>
+
+    <div class="result">
+      <div class="result-head">
+        <div id="title" class="result-title">Aucun transcript pour l'instant</div>
+        <div id="meta" class="result-meta">Collez une adresse, puis cliquez sur Récupérer.</div>
+      </div>
+      <div id="body" class="result-body empty">Le texte apparaîtra ici.</div>
+    </div>
+
+    <div class="footer">
+      <button id="copy" disabled>Copier le texte</button>
+      <button id="open">Ouvrir le dossier</button>
+      <span class="spacer"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let fmt = "md";
+let lastText = "";
+
+function setStatus(message, isError = false) {
+  const el = $("status");
+  el.textContent = message;
+  el.classList.toggle("error", isError);
+}
+
+function setBusy(busy) {
+  $("run").disabled = busy;
+  $("run").textContent = busy ? "Récupération…" : "Récupérer";
+}
+
+function api() {
+  return window.pywebview && window.pywebview.api;
+}
+
+document.querySelectorAll("#formats button").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    fmt = btn.dataset.fmt;
+    document.querySelectorAll("#formats button").forEach((b) => b.classList.toggle("active", b === btn));
+  });
+});
+
+async function run() {
+  const url = $("url").value.trim();
+  if (!url) {
+    setStatus("Collez d'abord l'adresse de la vidéo.", true);
+    return;
+  }
+  if (!api()) {
+    setStatus("L'interface se charge encore, réessayez dans un instant.", true);
+    return;
+  }
+  setBusy(true);
+  setStatus("Récupération en cours…");
+  try {
+    const res = await api().get_transcript(url, $("langs").value, fmt);
+    if (!res.ok) {
+      setStatus(res.message, true);
+      return;
+    }
+    lastText = res.text;
+    $("title").textContent = res.title;
+    const parts = [res.author, res.language, res.generated ? "générée automatiquement" : null].filter(Boolean);
+    $("meta").textContent = parts.join(" · ");
+    $("body").textContent = res.text;
+    $("body").classList.remove("empty");
+    $("copy").disabled = false;
+    setStatus(`Terminé · enregistré : ${res.filename}`);
+  } catch (e) {
+    setStatus(`Erreur inattendue : ${e}`, true);
+  } finally {
+    setBusy(false);
+  }
+}
+
+$("run").addEventListener("click", run);
+$("url").addEventListener("keydown", (e) => { if (e.key === "Enter") run(); });
+
+$("copy").addEventListener("click", async () => {
+  if (!lastText || !api()) return;
+  await api().copy(lastText);
+  setStatus("Texte copié. Vous pouvez le coller dans Claude.");
+});
+
+$("open").addEventListener("click", () => {
+  if (api()) api().open_folder();
+});
+
+$("close").addEventListener("click", () => { if (api()) api().close(); });
+$("minimize").addEventListener("click", () => { if (api()) api().minimize(); });
+$("fullscreen").addEventListener("click", () => { if (api()) api().fullscreen(); });
+
+$("url").focus();
+</script>
+</body>
+</html>
